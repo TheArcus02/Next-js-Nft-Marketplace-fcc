@@ -193,18 +193,4 @@ contract NftMarketplace {
     function getProceeds(address seller) external view returns (uint256) {
         return s_proceeds[seller];
     }
-
-    function getListingPrice(
-        address nftAddress,
-        uint256 tokenId
-    ) external view returns (uint256) {
-        return s_listings[nftAddress][tokenId].price;
-    }
-
-    function getListingSeller(
-        address nftAddress,
-        uint256 tokenId
-    ) external view returns (address) {
-        return s_listings[nftAddress][tokenId].seller;
-    }
 }
