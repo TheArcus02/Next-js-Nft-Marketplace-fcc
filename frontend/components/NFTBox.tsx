@@ -20,7 +20,9 @@ const NFTBox: NextPage<NFTBoxProps> = ({
 }) => {
     const [imageURI, setImageURI] = useState('')
 
-    const { runContractFunction: getTokenURI } = useWeb3Contract({ abi: nftAbi })
+    const { runContractFunction: getTokenURI } = useWeb3Contract({ abi: nftAbi, contractAddress: nftAddress, functionName: "tokenURI", params:{
+        tokenId: tokenId
+    } })
 
     const udpateUI = async () => {}
 
