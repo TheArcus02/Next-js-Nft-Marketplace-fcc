@@ -1,7 +1,10 @@
 import { NextPage } from 'next'
-import { useState } from 'react'
-import { useWeb3Contract } from 'react-moralis'
+import { useEffect, useState } from 'react'
+import { useMoralis, useWeb3Contract } from 'react-moralis'
+import Image from 'next/image'
 import nftAbi from '../constants/BasicNft.json'
+import { Card } from '@web3uikit/core'
+import ethers from 'ethers'
 
 interface NFTBoxProps {
     price?: number
@@ -18,15 +21,77 @@ const NFTBox: NextPage<NFTBoxProps> = ({
     nftMarketplaceAddress,
     seller,
 }) => {
-    const [imageURI, setImageURI] = useState('')
+    const [imageURI, setImageURI] = useState<string | undefined>()
+    const [tokenName, setTokenName] = useState<string | undefined>()
+    const [tokenDescription, setTokenDescription] = useState<string | undefined>()
 
-    const { runContractFunction: getTokenURI } = useWeb3Contract({ abi: nftAbi, contractAddress: nftAddress, functionName: "tokenURI", params:{
-        tokenId: tokenId
-    } })
+    const { chainId, isWeb3Enabled, account } = useMoralis()
+    // Getting function from basicNFT contract
+    const { runContractFunction: getTokenURI, data: tokenURI } = useWeb3Contract({
+        abi: nftAbi,
+        contractAddress: nftAddress,
+        functionName: 'tokenURI',
+        params: {
+            tokenId: tokenId,
+        },
+    })
 
-    const udpateUI = async () => {}
+    const updateUI = async () => {
+        console.log(`tokenURI: ${tokenURI}`)
 
-    return <div>NFTBox</div>
+        if (tokenURI) {
+            // IPFS Gateway: server that will return IPFS files from a "normal"URL.
+            const requestURL = (tokenURI as string).replace('ipfs://', 'https://ipfs.io/ipfs/')
+            const tokenURIResponse = await (await fetch(requestURL)).json()
+            const imageURI = tokenURIResponse.image
+            const imageURIURL = (imageURI as string).replace('ipfs://', 'https://ipfs.io/ipfs/')
+            setImageURI(imageURIURL)
+            setTokenName(tokenURIResponse.name)
+            setTokenDescription(tokenURIResponse.description)
+        }
+    }
+
+    useEffect(() => {
+        if (isWeb3Enabled) {
+            getTokenURI()
+        }
+    }, [isWeb3Enabled])
+
+    useEffect(() => {
+        updateUI()
+    }, [tokenURI])
+
+    const isOwnedByUser = seller === account || seller === undefined
+    const formattedSellerAddress = isOwnedByUser
+        ? 'You'
+        : seller?.slice(0, 6) + '...' + seller?.slice(-4)
+
+    return (
+        <div>
+            {imageURI ? (
+                <Card title={tokenName} description={tokenDescription}>
+                    <div className="p-2">
+                        <div className="flex flex-col items-end gap-2">
+                            <div>#{tokenId}</div>
+                            <div className="italic text-sm">Owned by {seller}</div>
+                            <Image
+                                loader={() => imageURI}
+                                src={imageURI}
+                                width={200}
+                                height={200}
+                                alt=""
+                            />
+                            <div className="font-bold">
+                                {ethers.utils.formatUnits(price!, 'ether')}
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            ) : (
+                <div>Loading...</div>
+            )}
+        </div>
+    )
 }
 
 export default NFTBox
