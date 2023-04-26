@@ -85,15 +85,28 @@ const SellNft: NextPage = () => {
     }
 
     // Get NFT balances
-
-    const { getNFTBalances, data: nfts } = useNFTBalances()
+    const {
+        getNFTBalances,
+        data: nfts,
+        error: nftError,
+        isLoading: nftIsLoading,
+    } = useNFTBalances()
 
     useEffect(() => {
-        fetchAvailableProceeds()
-        getNFTBalances({
-            params: { address: account || '', chain: (chainId || '0x1') as chainType },
-        })
+        if (account) {
+            fetchAvailableProceeds()
+            getNFTBalances({
+                params: { address: account || '', chain: (chainId || '0x1') as chainType },
+            })
+        }
     }, [account])
+
+    useEffect(() => {
+        console.log('===========================')
+        console.log('nfts', nfts)
+        console.log('nftIsLoading', nftIsLoading)
+        console.log('nftError', nftError)
+    }, [nfts, nftIsLoading, nftError])
 
     const handleWithdraw = async () => {
         const options = {
