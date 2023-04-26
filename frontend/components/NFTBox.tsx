@@ -5,9 +5,8 @@ import Image from 'next/image'
 import nftAbi from '../constants/BasicNft.json'
 import nftMarketplaceAbi from '../constants/NFTMarketplace.json'
 import { Card, useNotification } from '@web3uikit/core'
-import ethers from 'ethers'
 import { UpdateListingModal } from './UpdateListingModal'
-
+import { ethers } from 'ethers'
 interface NFTBoxProps {
     price?: number
     nftAddress: string
@@ -26,7 +25,7 @@ const NFTBox: NextPage<NFTBoxProps> = ({
     const [imageURI, setImageURI] = useState<string | undefined>()
     const [tokenName, setTokenName] = useState<string | undefined>()
     const [tokenDescription, setTokenDescription] = useState<string | undefined>()
-    const [showModal, setShowModal] = useState<Boolean>(false)
+    const [showModal, setShowModal] = useState<boolean>(false)
 
     const { chainId, isWeb3Enabled, account } = useMoralis()
     const dispatch = useNotification()
@@ -70,11 +69,10 @@ const NFTBox: NextPage<NFTBoxProps> = ({
         })
     }
 
-    const updateUI = async () => {
-        console.log(`tokenURI: ${tokenURI}`)
-
+    async function updateUI() {
+        console.log(`TokenURI is: ${tokenURI}`)
+        // We are cheating a bit here...
         if (tokenURI) {
-            // IPFS Gateway: server that will return IPFS files from a "normal"URL.
             const requestURL = (tokenURI as string).replace('ipfs://', 'https://ipfs.io/ipfs/')
             const tokenURIResponse = await (await fetch(requestURL)).json()
             const imageURI = tokenURIResponse.image
@@ -86,14 +84,14 @@ const NFTBox: NextPage<NFTBoxProps> = ({
     }
 
     useEffect(() => {
+        updateUI()
+    }, [tokenURI])
+
+    useEffect(() => {
         if (isWeb3Enabled) {
             getTokenURI()
         }
     }, [isWeb3Enabled])
-
-    useEffect(() => {
-        updateUI()
-    }, [tokenURI])
 
     const isOwnedByUser = seller === account || seller === undefined
     const formattedSellerAddress = isOwnedByUser
@@ -105,7 +103,7 @@ const NFTBox: NextPage<NFTBoxProps> = ({
             {imageURI ? (
                 <div>
                     <UpdateListingModal
-                        isVisible={true}
+                        isVisible={showModal}
                         tokenId={tokenId}
                         nftMarketplaceAddress={nftMarketplaceAddress}
                         nftMarketplaceAbi={nftMarketplaceAbi}
@@ -131,7 +129,7 @@ const NFTBox: NextPage<NFTBoxProps> = ({
                                     alt=""
                                 />
                                 <div className="font-bold">
-                                    {ethers.utils.formatUnits(price!, 'ether')}
+                                    {ethers.utils.formatEther(price || 0)} ETH
                                 </div>
                             </div>
                         </div>

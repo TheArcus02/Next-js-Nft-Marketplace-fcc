@@ -1,10 +1,9 @@
 import type { NextPage } from 'next'
-// import { useState } from "react"
 import NFTBox from '../components/NFTBox'
 import networkConfig from '../constants/networkMapping.json'
 import { useMoralis } from 'react-moralis'
-
-// const PAGE_SIZE = 9
+import GET_ACTIVE_ITEMS from '../constants/subgraphQueries'
+import { useQuery } from '@apollo/client'
 
 interface nftInterface {
     price: number
@@ -23,22 +22,13 @@ interface contractAddressesItemInterface {
 }
 
 const Home: NextPage = () => {
-    // TODO: Implement paging in UI
-    // const [page, setPage] = useState(1)
     const { chainId } = useMoralis()
     const addresses: contractAddressesInterface = networkConfig
     const marketplaceAddress = chainId
         ? addresses[parseInt(chainId!).toString()]['NftMarketplace'][0]
         : null
 
-    //! Uncoment when theGraph indexer is implemented
-    // const { loading, error: subgraphQueryError, data: listedNfts } = useQuery(GET_ACTIVE_ITEMS)
-
-    // temporary values before implementing theGraph indexer
-    const loading = false
-    const listedNfts = {
-        activeItems: [],
-    }
+    const { loading, error: subgraphQueryError, data: listedNfts } = useQuery(GET_ACTIVE_ITEMS)
 
     return (
         <div className="container mx-auto">
@@ -47,12 +37,9 @@ const Home: NextPage = () => {
                 {loading || !listedNfts ? (
                     <div>Loading...</div>
                 ) : (
-                    listedNfts.activeItems.map((nft: nftInterface /*, index*/) => {
+                    listedNfts.activeItems.map((nft: nftInterface) => {
                         const { price, nftAddress, tokenId, seller } = nft
-                        // console.log("Patrick")
-                        console.log('PATRICK')
-                        console.log(marketplaceAddress)
-                        // console.log(address)
+                        // console.log(marketplaceAddress)
                         // console.log(nft)
 
                         return (
