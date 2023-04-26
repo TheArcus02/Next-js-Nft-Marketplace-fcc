@@ -40,7 +40,7 @@ const Home: NextPage = () => {
                     listedNfts.activeItems.map((nft: nftInterface) => {
                         const { price, nftAddress, tokenId, seller } = nft
                         // console.log(marketplaceAddress)
-                        // console.log(nft)
+                        console.log(nft)
 
                         return (
                             <NFTBox

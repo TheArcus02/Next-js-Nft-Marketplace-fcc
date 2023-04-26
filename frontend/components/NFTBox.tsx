@@ -4,9 +4,10 @@ import { useMoralis, useWeb3Contract } from 'react-moralis'
 import Image from 'next/image'
 import nftAbi from '../constants/BasicNft.json'
 import nftMarketplaceAbi from '../constants/NFTMarketplace.json'
-import { Card, useNotification } from '@web3uikit/core'
+import { Card, Illustration, Tooltip, useNotification } from '@web3uikit/core'
 import { UpdateListingModal } from './UpdateListingModal'
 import { ethers } from 'ethers'
+import { SellNFTModal } from './SellNFTModal'
 interface NFTBoxProps {
     price?: number
     nftAddress: string
@@ -29,6 +30,8 @@ const NFTBox: NextPage<NFTBoxProps> = ({
 
     const { chainId, isWeb3Enabled, account } = useMoralis()
     const dispatch = useNotification()
+
+    const isListed = seller !== undefined
 
     // Getting function from basicNFT contract
     const { runContractFunction: getTokenURI, data: tokenURI } = useWeb3Contract({
@@ -98,46 +101,65 @@ const NFTBox: NextPage<NFTBoxProps> = ({
         ? 'You'
         : seller?.slice(0, 6) + '...' + seller?.slice(-4)
 
+    const tooltipContent = isListed
+        ? isOwnedByUser
+            ? 'Update listing'
+            : 'Buy me'
+        : 'Create listing'
+
     return (
-        <div>
-            {imageURI ? (
-                <div>
-                    <UpdateListingModal
-                        isVisible={showModal}
-                        tokenId={tokenId}
-                        nftMarketplaceAddress={nftMarketplaceAddress}
-                        nftMarketplaceAbi={nftMarketplaceAbi}
-                        nftAddress={nftAddress}
-                        imageURI={imageURI}
-                        currentPrice={price}
-                        onClose={() => setShowModal(false)}
-                    />
-                    <Card
-                        title={tokenName}
-                        description={tokenDescription}
-                        onClick={handleCardClick}
-                    >
-                        <div className="p-2">
+        <div className="p-2">
+            <SellNFTModal
+                isVisible={showModal && !isListed}
+                imageURI={imageURI}
+                nftAbi={nftAbi}
+                nftMarketplaceAbi={nftMarketplaceAbi}
+                nftAddress={nftAddress}
+                tokenId={tokenId}
+                onClose={() => setShowModal(false)}
+                nftMarketplaceAddress={nftMarketplaceAddress}
+            />
+            <UpdateListingModal
+                isVisible={showModal && isListed}
+                imageURI={imageURI}
+                nftMarketplaceAbi={nftMarketplaceAbi}
+                nftAddress={nftAddress}
+                tokenId={tokenId}
+                onClose={() => setShowModal(false)}
+                nftMarketplaceAddress={nftMarketplaceAddress}
+                currentPrice={price}
+            />
+            <Card title={tokenName} description={tokenDescription} onClick={handleCardClick}>
+                <Tooltip content={tooltipContent} position="top">
+                    <div className="p-2">
+                        {imageURI ? (
                             <div className="flex flex-col items-end gap-2">
                                 <div>#{tokenId}</div>
-                                <div className="italic text-sm">Owned by {seller}</div>
+                                <div className="italic text-sm">
+                                    Owned by {formattedSellerAddress}
+                                </div>
                                 <Image
                                     loader={() => imageURI}
                                     src={imageURI}
-                                    width={200}
-                                    height={200}
-                                    alt=""
+                                    height="200"
+                                    width="200"
+                                    alt="NFT Image"
                                 />
-                                <div className="font-bold">
-                                    {ethers.utils.formatEther(price || 0)} ETH
-                                </div>
+                                {price && (
+                                    <div className="font-bold">
+                                        {ethers.utils.formatEther(price)} ETH
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    </Card>
-                </div>
-            ) : (
-                <div>Loading...</div>
-            )}
+                        ) : (
+                            <div className="flex flex-col items-center gap-1">
+                                <Illustration height="180px" logo="lazyNft" width="100%" />
+                                Loading...
+                            </div>
+                        )}
+                    </div>
+                </Tooltip>
+            </Card>
         </div>
     )
 }
